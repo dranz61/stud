@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <link rel="manifest" href="./manifest.json">
+    <title>MidoStudy - Odaklanma Alanı</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- SAF SİYAH & BEYAZ UI + ERFENMUN MOR AURA --- */
+        :root {
+            --bg-main: #000000; --bg-card: rgba(18, 18, 18, 0.6); 
+            --accent: #FFFFFF; --accent-hover: #e0e0e0; --accent-text: #000000; 
+            --text-main: #FFFFFF; --text-sec: #888888; 
+            --border: rgba(255, 255, 255, 0.06); --border-hover: rgba(255, 255, 255, 0.15);
+            --neon-bordo: #A30015;
+            --font-head: 'DM Serif Display', serif; --font-body: 'DM Sans', sans-serif; --font-mono: 'Space Mono', monospace;
+            --radius-card: 16px; --radius-btn: 12px; --radius-sm: 8px; --transition: all 0.3s ease;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg-main); color: var(--text-main); font-family: var(--font-body); -webkit-font-smoothing: antialiased; overflow-x: hidden; min-height: 100vh; position: relative; z-index: 0; }
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        .ambient-glow { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 80vw; height: 80vw; border-radius: 50%; background: radial-gradient(circle, rgba(105, 55, 195, 0.12) 0%, rgba(0, 0, 0, 0) 60%); z-index: -1; pointer-events: none; }
+
+        .card { background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: var(--radius-card); padding: 24px; margin-bottom: 24px; transition: var(--transition); border: 1px solid var(--border); }
+        .card:hover { border-color: var(--border-hover); }
+        .card-title { font-family: var(--font-head); font-size: 1.3rem; color: var(--text-main); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
+
+        button { cursor: pointer; border: none; outline: none; font-family: var(--font-body); transition: var(--transition); }
+        .btn-black { background: var(--accent); color: var(--accent-text); padding: 12px 24px; border-radius: var(--radius-btn); font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-black:hover { background: var(--accent-hover); transform: translateY(-2px); }
+        .btn-icon { background: transparent; color: var(--text-sec); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+        .btn-icon:hover { color: var(--text-main); }
+
+        input, select, textarea { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-main); padding: 12px 16px; border-radius: var(--radius-sm); font-family: var(--font-body); width: 100%; transition: var(--transition); }
+        input:focus, textarea:focus { border-color: rgba(255,255,255,0.2); outline: none; background: rgba(255,255,255,0.06); }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; filter: grayscale(1); }
+
+        header { display: flex; justify-content: space-between; align-items: center; padding: 16px 40px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.5); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; }
+        .logo { font-family: var(--font-head); font-size: 2.2rem; color: var(--text-main); letter-spacing: 1px; }
+        .header-center { display: flex; align-items: center; gap: 16px; color: var(--text-sec); font-weight: 500; flex-wrap: wrap; justify-content: center; }
+        .yks-compact, .date-picker-wrap, .live-clock-sm { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 8px 16px; border-radius: var(--radius-sm); color: var(--text-main); font-weight: 500; display: flex; align-items: center; transition: var(--transition); }
+        .yks-compact { font-size: 0.95rem; }
+        .yks-compact span { font-family: var(--font-mono); margin-left: 6px; font-weight: 700; color: var(--text-main); }
+        .date-picker-wrap { position: relative; cursor: pointer; gap: 8px; }
+        .date-picker-wrap:hover { background: rgba(255,255,255,0.08); border-color: var(--border-hover); }
+        .date-picker-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .live-clock-sm { font-family: var(--font-mono); font-size: 1rem; font-weight: 700; }
+
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .btn-kunduz { text-decoration: none; padding: 6px 12px; font-size: 0.85rem; border-radius: 8px; }
+        .btn-settings { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: var(--text-main); display: flex; align-items: center; justify-content: center; }
+        .btn-settings:hover { border-color: var(--accent); background: rgba(255,255,255,0.1); }
+
+        #dashboard { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+        .grid-container { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 24px; align-items: start; margin-top: 32px; }
+
+        .card-center-main { display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
+        .progress-circle-wrap { position: relative; width: 200px; height: 200px; margin: 20px auto; }
+        .progress-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .progress-svg circle { fill: none; stroke-width: 14; stroke-linecap: round; }
+        .prog-bg { stroke: rgba(255,255,255,0.05); }
+        .prog-bar { stroke: var(--text-main); stroke-dasharray: 540; stroke-dashoffset: 540; transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+        
+        /* FİX: Tam merkezi hizalama için Flexbox kullanıldı */
+        .progress-text-inner { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .progress-time { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 700; color: var(--text-main); text-align: center; }
+        .progress-target { font-size: 0.9rem; color: var(--text-sec); margin-top: 4px; text-align: center; }
+        
+        .progress-status { font-weight: 500; color: var(--text-main); margin-bottom: 30px; font-size: 1.05rem; }
+        .btn-start-large { width: 100%; font-size: 1.15rem; padding: 16px; margin-top: auto; letter-spacing: 0.5px; }
+
+        .chart-wrap { height: 160px; width: 100%; margin-top: 10px; }
+        svg.weekly-chart { width: 100%; height: 100%; overflow: visible; }
+        .bar { fill: rgba(255,255,255,0.1); transition: var(--transition); rx: 4; }
+        .bar:hover { fill: rgba(255,255,255,0.25); }
+        .bar-today { fill: var(--text-main); }
+        .bar-text { fill: var(--text-sec); font-size: 11px; font-family: var(--font-body); text-anchor: middle; }
+        .target-line { stroke: var(--text-main); stroke-dasharray: 4,4; stroke-width: 1; opacity: 0.3; }
+        .chart-stats { display: flex; justify-content: space-between; margin-top: 16px; font-size: 0.9rem; color: var(--text-sec); font-weight: 500; }
+
+        .list-row { display: flex; align-items: center; gap: 12px; padding: 14px; background: rgba(255,255,255,0.02); border: 1px solid transparent; border-radius: var(--radius-sm); margin-bottom: 10px; transition: var(--transition); }
+        .list-row:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.05); }
+        .list-row.completed span.item-text { text-decoration: line-through; opacity: 0.4; }
+        .item-text { flex-grow: 1; font-weight: 500; font-size: 0.95rem; }
+        .btn-delete { background: transparent; color: var(--text-sec); font-size: 1.3rem; cursor: pointer; border: none; padding: 0 4px; }
+        .btn-delete:hover { color: var(--text-main); }
+
+        .agenda-list { max-height: 250px; overflow-y: auto; padding-right: 5px; }
+        .agenda-item { padding: 14px; border-left: 3px solid var(--text-main); background: rgba(255,255,255,0.02); margin-bottom: 10px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); transition: var(--transition); }
+        .agenda-item:hover { background: rgba(255,255,255,0.06); }
+        .agenda-time { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-sec); margin-bottom: 4px; }
+        
+        .stat-box { background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 24px 20px; border-radius: var(--radius-sm); text-align: center; margin-bottom: 12px; transition: var(--transition); }
+        .stat-box:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.06); }
+        .stat-val { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
+
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; visibility: hidden; transition: var(--transition); }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content { background: #111; padding: 32px; border-radius: var(--radius-card); width: 400px; max-width: 90%; border: 1px solid var(--border); transform: scale(0.96); transition: var(--transition); max-height: 90vh; overflow-y: auto; }
+        .modal.active .modal-content { transform: scale(1); }
+        .toast { position: fixed; top: 20px; right: 20px; background: var(--accent); color: var(--accent-text); padding: 12px 24px; border-radius: var(--radius-sm); font-weight: 700; z-index: 9999; opacity: 0; transform: translateY(-20px); transition: var(--transition); }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        .camp-empty { text-align: center; color: var(--text-sec); padding: 20px 0; font-size: 0.95rem; }
+        .camp-task-box { background: rgba(255,255,255,0.05); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 16px; }
+        .camp-day-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-sec); margin-bottom: 6px; }
+        
+        .subj-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; }
+        .subj-row:last-child { border-bottom: none; }
+        .subj-name { font-weight: 500; color: var(--text-sec); }
+        .subj-time { font-family: var(--font-mono); font-weight: 700; }
+
+        .btn-selectable { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: var(--transition); }
+        .btn-selectable.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
+
+        @media (max-width: 1024px) { .grid-container { grid-template-columns: 1fr 1fr; margin-top: 32px; } .col-center { grid-column: span 2; } }
+        @media (max-width: 768px) { 
+            header { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "logo right" "center center"; gap: 16px; padding: 12px 20px; }
+            .logo { grid-area: logo; align-self: center; font-size: 1.8rem; }
+            .header-right { grid-area: right; align-self: center; gap: 8px; }
+            .header-center { grid-area: center; width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+            .yks-compact, .live-clock-sm, .date-picker-wrap { font-size: 0.9rem; padding: 6px 12px; }
+            .btn-kunduz { padding: 6px 10px; font-size: 0.85rem; }
+            .btn-settings { width: 36px; height: 36px; }
+            #dashboard { padding: 16px 20px; }
+            .grid-container { display: flex; flex-direction: column; gap: 24px; align-items: stretch; margin-top: 16px; padding: 0 20px; }
+            .col-left, .col-center, .col-right { display: contents; }
+            .card { width: 100%; margin-bottom: 0 !important; padding: 20px; }
+            .card-center-main { order: 1; padding: 24px 20px; } .haftalik { order: 2; } .hedefler { order: 3; } .kamp { order: 4; } .agenda { order: 5; } .istatistikler { order: 6; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow"></div>
+
+    <div id="dashboard" class="fade-in">
+        <header>
+            <div class="logo">MidoStudy</div>
+            <div class="header-center">
+                <div class="yks-compact" id="yks-compact-timer">YKS 2027: Yükleniyor...</div>
+                <label class="date-picker-wrap">
+                    <span id="date-display">Tarih Yükleniyor...</span>
+                    <input type="date" id="history-date-picker" class="date-picker-input" onchange="window.changeViewDate(this.value)">
+                </label>
+                <div class="live-clock-sm" id="header-clock">00:00:00</div>
+            </div>
+            <div class="header-right">
+                
+                <button class="btn-settings" onclick="window.location.href='kaynaklar.html'" title="Kaynak Matrisi">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+                    </svg>
+                </button>
+
+                <a href="https://kunduz.com/u/student/counseling/" target="_blank" class="btn-black btn-kunduz">🦫 Kunduz</a>
+                
+                <button class="btn-settings" onclick="window.openScheduleModal()" title="Ders Programı">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path><path d="M16 18h.01"></path></svg>
+                </button>
+
+                <button class="btn-settings" onclick="window.openSettings()" title="Ayarlar">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="grid-container">
+            <div class="col-left">
+                <div class="card haftalik">
+                    <div class="card-title">Haftalık Analiz</div>
+                    <div class="chart-wrap" id="chart-container"></div>
+                    <div class="chart-stats"><span id="stat-week-total">Toplam: 0s</span><span id="stat-week-avg">Ort: 0s</span></div>
+                </div>
+                
+                <div class="card kamp">
+                    <div class="card-title">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            Aktif Kamp 
+                            <button id="btn-cycle-camp" class="btn-icon hidden" onclick="window.cycleActiveCamp()" style="width:24px; height:24px; font-size:1rem;" title="Diğer Kampa Geç">🔄</button>
+                        </div>
+                        <button class="btn-icon" onclick="window.openCampCreateModal()" title="Yeni Kamp">+</button>
+                    </div>
+                    <div id="camp-display-area"></div>
+                </div>
+            </div>
+
+            <div class="col-center">
+                <div class="card card-center-main">
+                    <div class="card-title" style="width: 100%; justify-content: center;" id="progress-card-title">Bugünkü İlerleme</div>
+                    <div class="progress-circle-wrap">
+                        <svg class="progress-svg" viewBox="0 0 200 200"><circle class="prog-bg" cx="100" cy="100" r="86"></circle><circle class="prog-bar" id="prog-bar" cx="100" cy="100" r="86"></circle></svg>
+                        <div class="progress-text-inner">
+                            <div class="progress-time" id="prog-time">0s 0dk 0sn</div>
+                            <div class="progress-target" id="prog-target">/ 6 saat</div>
+                        </div>
+                    </div>
+                    <div class="progress-status" id="prog-status">%0 tamamlandı</div>
+                    <button class="btn-black btn-start-large" onclick="window.location.href='study.html'">Çalışmaya Başla →</button>
+                </div>
+                <div class="card agenda">
+                    <div class="card-title">Zaman Çizelgesi <button class="btn-icon" onclick="window.openAgendaModal()">+</button></div>
+                    <div class="agenda-list" id="agenda-list"></div>
+                </div>
+            </div>
+
+            <div class="col-right">
+                <div class="card hedefler">
+                    <div class="card-title">Hedeflerim <button class="btn-icon" onclick="window.addGoal()">+</button></div>
+                    <div id="goals-list"></div>
+                </div>
+                <div class="card istatistikler">
+                    <div class="card-title">İstatistikler</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                        <div class="stat-box"><div style="font-size:0.85rem; color:var(--text-sec); margin-bottom:8px;">Seri (Streak)</div><div class="stat-val" id="stat-streak">0</div></div>
+                        <div class="stat-box"><div style="font-size:0.85rem; color:var(--text-sec); margin-bottom:8px;">Tüm Zamanlar</div><div class="stat-val" style="font-size: 1.1rem;" id="stat-total-time">0s 0dk</div></div>
+                    </div>
+                    <div style="padding-top: 16px; border-top: 1px solid var(--border);">
+                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-sec); margin-bottom: 12px; letter-spacing: 1px; text-transform: uppercase;">Bugünkü Ders Dağılımı</div>
+                        <div id="subject-stats-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="camp-create-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="card-title">Yeni Kamp Başlat <button class="btn-icon" onclick="window.closeCampCreateModal()">✕</button></div>
+            <div style="margin-bottom: 16px;">
+                <label style="font-size:0.85rem; color:var(--text-sec); font-weight:500;">Kamp Adı:</label>
+                <input type="text" id="camp-name-input" placeholder="Örn: TYT Fen Kampı" style="margin-top:6px;">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="font-size:0.85rem; color:var(--text-sec); font-weight:500;">Ders(ler) Seçin:</label>
+                <div id="camp-subject-selectors" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; max-height: 150px; overflow-y: auto; padding-right: 5px;">
+                    </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                <div>
+                    <label style="font-size:0.8rem; color:var(--text-sec); font-weight:700; text-transform: uppercase; letter-spacing: 1px; display:block; margin-bottom:8px;">Başlangıç</label>
+                    <input type="date" id="camp-start-input" style="margin:0; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); color:var(--accent); font-family:var(--font-mono); font-size:1rem; padding:10px; cursor:pointer; width:100%; border-radius:8px;">
+                </div>
+                <div>
+                    <label style="font-size:0.8rem; color:var(--text-sec); font-weight:700; text-transform: uppercase; letter-spacing: 1px; display:block; margin-bottom:8px;">Bitiş</label>
+                    <input type="date" id="camp-end-input" style="margin:0; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); color:var(--accent); font-family:var(--font-mono); font-size:1rem; padding:10px; cursor:pointer; width:100%; border-radius:8px;">
+                </div>
+            </div>
+
+            <button class="btn-black" style="width:100%" onclick="window.startCampWizard()">İleri →</button>
+        </div>
+    </div>
+
+    <div id="camp-wizard-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="card-title"><span id="wizard-title">Kamp Planı: 1. Gün</span> <button class="btn-icon" onclick="window.closeWizardModal()">✕</button></div>
+            <div style="font-size: 0.85rem; color: var(--text-sec); margin-bottom: 16px;" id="wizard-date-label">Tarih</div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-size:0.85rem; color:var(--text-sec); font-weight:500;">Yapılacaklar (Maddeler):</label>
+                <div style="display:flex; gap:8px; margin-top:6px;">
+                    <input type="text" id="wizard-todo-input" placeholder="Madde ekle...">
+                    <button class="btn-black" onclick="window.addWizardTodo()">+</button>
+                </div>
+                <ul id="wizard-todo-list" style="margin-top: 10px; padding-left: 20px; font-size: 0.95rem; color: var(--text-main);"></ul>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label style="font-size:0.85rem; color:var(--text-sec); font-weight:500;">O Güne Özel Notlar:</label>
+                <textarea id="wizard-notes-input" rows="3" placeholder="Hatırlatmalar, formüller..." style="margin-top:6px; resize:none;"></textarea>
+            </div>
+
+            <div style="display:flex; gap: 10px;">
+                <button class="btn-black" style="flex:1; background:#222; color:#FFF;" id="btn-wizard-prev" onclick="window.wizardPrev()">Önceki Gün</button>
+                <button class="btn-black" style="flex:1;" id="btn-wizard-next" onclick="window.wizardNext()">Sonraki Gün</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="schedule-modal" class="modal">
+        <div class="modal-content" style="width: 90%; max-width: 800px; padding: 24px;">
+            <div class="card-title">Ders Programı <button class="btn-icon" onclick="window.closeScheduleModal()">✕</button></div>
+            <div style="width: 100%; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border);">
+                <img src="dersprogram.png" alt="Ders Programı bulunamadı. Lütfen dersprogram.png dosyasını klasöre ekleyin." style="width: 100%; height: auto; display: block; color: var(--text-sec); text-align: center; padding: 20px;">
+            </div>
+        </div>
+    </div>
+
+    <div id="agenda-modal" class="modal">
+        <div class="modal-content" style="width: 340px;">
+            <div class="card-title">Etkinlik Ekle <button class="btn-icon" onclick="window.closeAgendaModal()">✕</button></div>
+            <div style="margin-bottom: 16px;"><label style="font-size:0.85rem; color:var(--text-sec); font-weight:500;">Saat:</label><input type="time" id="agenda-time" style="margin-top:6px;"></div>
+            <div style="margin-bottom: 24px;"><label style="font-size:0.85rem; color:var(--text-sec); font-weight:500;">Açıklama:</label><input type="text" id="agenda-title" placeholder="Örn: Matematik Çalışması" style="margin-top:6px;"></div>
+            <button class="btn-black" style="width:100%" onclick="window.saveAgenda()">Ekle</button>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="card-title">
+                <span ondblclick="window.checkAdmin()" style="cursor: default; user-select: none;">Ayarlar</span> 
+                <button class="btn-icon" onclick="window.closeSettings()">✕</button>
+            </div>
+            <div style="margin-bottom: 20px;"><label style="font-size:0.9rem; font-weight:500; color:var(--text-sec);">Günlük Hedef (Saat):</label><input type="number" id="set-target" style="margin-top:8px;"></div>
+            <div id="admin-panel" style="display: none; margin-bottom: 24px; padding-top: 20px; border-top: 1px solid var(--border);">
+                <label style="font-size:0.9rem; font-weight:500; color:var(--neon-bordo);">Yönetici: Unutulan Süreyi Ekle (Dk)</label>
+                <div style="display:flex; gap:12px; margin-top:8px;">
+                    <input type="number" id="manual-time-m" placeholder="Örn: 50" style="flex:1; margin:0;">
+                    <button class="btn-black" style="padding: 10px 20px; background: var(--neon-bordo); color: #FFF;" onclick="window.addManualTime()">Ekle</button>
+                </div>
+            </div>
+            <button class="btn-black" style="width: 100%; margin-bottom: 12px;" onclick="window.saveSettings()">Değişiklikleri Kaydet</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">İşlem başarılı!</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXUUW1XrkTHtEkNLPzd7F4P0jBiP5KnzU",
+            authDomain: "midostudy-1960d.firebaseapp.com",
+            databaseURL: "https://midostudy-1960d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "midostudy-1960d",
+            storageBucket: "midostudy-1960d.firebasestorage.app",
+            messagingSenderId: "299113418248",
+            appId: "1:299113418248:web:42afdb2919766d1c7d8bbd"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'users/mirza_data');
+
+        window.getLocalYMD = function(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+        const realTodayStr = window.getLocalYMD(new Date());
+        window.currentViewDate = realTodayStr; 
+        
+        window.appData = { targetHours: 6, goals: [], agenda: {}, sessions: {}, camps: [], stats: { streak: 0, lastStudyDate: null, totalPomo: 0 } };
+        const yksTargetDate = new Date("2027-06-19T10:15:00").getTime();
+
+        const AVAILABLE_SUBJECTS = [
+            "TYT Türkçe", "TYT Sosyal", "TYT Matematik", "TYT Geometri", "TYT Fizik", "TYT Kimya", "TYT Biyoloji",
+            "AYT Matematik", "AYT Geometri", "AYT Fizik", "AYT Kimya", "AYT Biyoloji"
+        ];
+
+        function initDateData(dateStr) {
+            if(!window.appData.agenda[dateStr]) window.appData.agenda[dateStr] = [];
+            if(!window.appData.sessions[dateStr]) window.appData.sessions[dateStr] = [];
+            if(!window.appData.camps) window.appData.camps = [];
+            if(!window.appData.goals) window.appData.goals = [];
+        }
+
+        get(dbRef).then((snapshot) => {
+            if (snapshot.exists()) { 
+                let data = snapshot.val();
+                window.appData.targetHours = data.targetHours || 6;
+                window.appData.goals = data.goals || [];
+                window.appData.agenda = data.agenda || {};
+                window.appData.sessions = data.sessions || {};
+                window.appData.camps = data.camps || [];
+                window.appData.stats = data.stats || { streak: 0, lastStudyDate: null, totalPomo: 0 };
+            }
+            initDateData(realTodayStr); document.getElementById('history-date-picker').value = realTodayStr;
+            window.updateDashboard();
+        }).catch((error) => { 
+            initDateData(realTodayStr); window.updateDashboard(); 
+        });
+
+        window.saveData = function() { set(dbRef, window.appData); }
+        window.changeViewDate = function(newDate) { if(!newDate) return; window.currentViewDate = newDate; initDateData(window.currentViewDate); window.updateDashboard(); }
+
+        function pad(n) { return n < 10 ? '0'+n : n; }
+        window.formatTimeSpan = function(ms) {
+            let totalSec = Math.floor(ms / 1000); let h = Math.floor(totalSec / 3600); let m = Math.floor((totalSec % 3600) / 60); let s = totalSec % 60;
+            return `${h}s ${m}dk ${s}sn`;
+        }
+        window.formatTimeSpanShort = function(ms) {
+            let totalSec = Math.floor(ms / 1000); let h = Math.floor(totalSec / 3600); let m = Math.floor((totalSec % 3600) / 60);
+            return `${h}s ${m}dk`;
+        }
+
+        window.showToast = function(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg; toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        window.updateDashboard = function() {
+            const dateObj = new Date(window.currentViewDate + "T12:00:00");
+            let dateText = ""; 
+            try { dateText = dateObj.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); } catch(e) { dateText = window.currentViewDate; }
+            if(window.currentViewDate === realTodayStr) dateText = "Bugün, " + dateText;
+            document.getElementById('date-display').innerText = dateText;
+            document.getElementById('progress-card-title').innerText = window.currentViewDate === realTodayStr ? "Bugünkü İlerleme" : "İlerleme";
+
+            const viewMs = (window.appData.sessions[window.currentViewDate] || []).reduce((acc, curr) => acc + curr.durationMs, 0);
+            const targetMs = window.appData.targetHours * 3600000;
+            const percent = Math.min(100, (viewMs / targetMs) * 100);
+            
+            document.getElementById('prog-time').innerText = window.formatTimeSpan(viewMs);
+            document.getElementById('prog-target').innerText = `/ ${window.appData.targetHours} saat`;
+            document.getElementById('prog-bar').style.strokeDashoffset = 540 - (540 * percent) / 100;
+            document.getElementById('prog-status').innerText = percent >= 100 ? "Hedef aşıldı! 🎉" : `%${Math.floor(percent)} tamamlandı`;
+            document.getElementById('stat-streak').innerText = `${window.appData.stats.streak}`;
+            
+            let totalAllTimeMs = 0;
+            for (let dateKey in window.appData.sessions) window.appData.sessions[dateKey].forEach(s => { totalAllTimeMs += s.durationMs; });
+            document.getElementById('stat-total-time').innerText = window.formatTimeSpanShort(totalAllTimeMs);
+
+            window.renderGoals(); window.renderAgenda(); window.renderChart();
+            window.renderSubjectStats(); window.renderCamp();
+        }
+
+        window.renderSubjectStats = function() {
+            const list = document.getElementById('subject-stats-list');
+            let sessions = window.appData.sessions[window.currentViewDate] || [];
+            let subjMap = {};
+            sessions.forEach(s => {
+                if(s.subject) {
+                    let key = `${s.exam ? s.exam + ' ' : ''}${s.subject}`;
+                    if(!subjMap[key]) subjMap[key] = 0;
+                    subjMap[key] += s.durationMs;
+                }
+            });
+            let html = '';
+            for(let key in subjMap) {
+                if(subjMap[key] > 60000) { 
+                    html += `<div class="subj-row"><span class="subj-name">${key}</span><span class="subj-time">${window.formatTimeSpanShort(subjMap[key])}</span></div>`;
+                }
+            }
+            list.innerHTML = html || '<div style="color:var(--text-sec); font-size:0.85rem; text-align:center; padding: 10px 0;">Henüz ders verisi yok.</div>';
+        }
+
+        let currentCampViewIndex = 0;
+
+        window.renderCamp = function() {
+            const area = document.getElementById('camp-display-area');
+            const cycleBtn = document.getElementById('btn-cycle-camp');
+            
+            let activeCamps = window.appData.camps.filter(c => window.currentViewDate >= c.startDate && window.currentViewDate <= c.endDate);
+            
+            if(activeCamps.length === 0) {
+                cycleBtn.classList.add('hidden');
+                area.innerHTML = `<div class="camp-empty">Şu an seçili tarihte aktif bir kampınız yok. Yeni bir kamp başlatın ve sınırlarınızı zorlayın.</div>
+                                  <button class="btn-black" style="width:100%; font-size:0.9rem; margin-top:10px;" onclick="window.openCampCreateModal()">Kamp Başlat</button>`;
+                return;
+            }
+
+            if(currentCampViewIndex >= activeCamps.length) currentCampViewIndex = 0;
+            let camp = activeCamps[currentCampViewIndex];
+
+            if(activeCamps.length > 1) cycleBtn.classList.remove('hidden');
+            else cycleBtn.classList.add('hidden');
+
+            window.currentlyViewingCamp = camp;
+            let startD = new Date(camp.startDate + "T12:00:00");
+            let currD = new Date(window.currentViewDate + "T12:00:00");
+            let diff = Math.floor((currD - startD) / (1000 * 60 * 60 * 24));
+            let defaultDay = (diff >= 0 && diff < camp.days.length) ? diff : 0;
+
+            window.renderCampSelectedDay(defaultDay);
+        }
+
+        window.cycleActiveCamp = function() {
+            currentCampViewIndex++;
+            window.renderCamp();
+        }
+
+        window.renderCampSelectedDay = function(dayIndex) {
+            dayIndex = parseInt(dayIndex);
+            let camp = window.currentlyViewingCamp;
+            let dayData = camp.days[dayIndex] || { todos: [], notes: '' };
+            const area = document.getElementById('camp-display-area');
+
+            let optionsHtml = '';
+            for(let i=0; i<camp.days.length; i++) {
+                optionsHtml += `<option value="${i}" ${i === dayIndex ? 'selected' : ''}>${i+1}. Gün</option>`;
+            }
+
+            let todosHtml = dayData.todos && dayData.todos.length > 0 
+                ? dayData.todos.map(t => `<li style="margin-bottom:6px;">${t}</li>`).join('')
+                : "<li style='list-style:none; color:var(--text-sec);'>Bu gün için görev eklenmemiş.</li>";
+
+            let notesHtml = dayData.notes ? `<strong>Notlar:</strong><br>${dayData.notes.replace(/\n/g, '<br>')}` : '';
+            let subjHtml = camp.subjects ? camp.subjects.join(', ') : (camp.subject || '');
+
+            area.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                    <span style="font-size: 1.1rem; font-weight: 700; color: var(--accent);">${camp.name}</span>
+                    <select onchange="window.renderCampSelectedDay(this.value)" style="width: auto; padding: 4px 8px; font-size: 0.85rem; font-family: var(--font-body); background: #111; color: #FFF; border: 1px solid #333;">
+                        ${optionsHtml}
+                    </select>
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-sec); font-weight:700; margin-bottom: 16px;">DERS: <span style="color:var(--text-main);">${subjHtml}</span></div>
+                
+                <div class="camp-task-box">
+                    <div class="camp-day-label">YAPILACAKLAR</div>
+                    <ul style="padding-left:20px; margin-bottom:12px; font-size:0.95rem;">${todosHtml}</ul>
+                    ${notesHtml ? `<div style="font-size:0.85rem; color:var(--text-main); border-top: 1px solid var(--border); padding-top: 12px; margin-top: 8px;">${notesHtml}</div>` : ''}
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-black" style="flex:1; background: #111; border: 1px solid #333; color: #FFF; font-size:0.85rem;" onclick="window.editCamp(${camp.id}, ${dayIndex})">Günü Düzenle</button>
+                    <button class="btn-black" style="background: transparent; border: 1px solid var(--neon-bordo); color: var(--neon-bordo); font-size:0.85rem;" onclick="window.deleteCamp(${camp.id})">Sil</button>
+                </div>
+            `;
+        }
+
+        let selectedCampSubjects = new Set();
+        
+        window.openCampCreateModal = function() {
+            document.getElementById('camp-start-input').value = window.currentViewDate;
+            document.getElementById('camp-end-input').value = window.currentViewDate;
+            document.getElementById('camp-name-input').value = '';
+            selectedCampSubjects.clear();
+            
+            const subjArea = document.getElementById('camp-subject-selectors');
+            subjArea.innerHTML = AVAILABLE_SUBJECTS.map(subj => 
+                `<button id="btn-c-subj-${subj.replace(/\s+/g, '')}" class="btn-selectable" onclick="window.toggleCampSubject('${subj}')">${subj}</button>`
+            ).join('');
+
+            document.getElementById('camp-create-modal').classList.add('active');
+        }
+        
+        window.closeCampCreateModal = function() { document.getElementById('camp-create-modal').classList.remove('active'); }
+
+        window.toggleCampSubject = function(subj) {
+            const btn = document.getElementById(`btn-c-subj-${subj.replace(/\s+/g, '')}`);
+            if(selectedCampSubjects.has(subj)) {
+                selectedCampSubjects.delete(subj);
+                btn.classList.remove('active');
+            } else {
+                selectedCampSubjects.add(subj);
+                btn.classList.add('active');
+            }
+        }
+
+        let isEditingCamp = false;
+
+        window.startCampWizard = function() {
+            let name = document.getElementById('camp-name-input').value.trim();
+            let sd = document.getElementById('camp-start-input').value;
+            let ed = document.getElementById('camp-end-input').value;
+            
+            if(!name || selectedCampSubjects.size === 0 || !sd || !ed) return alert("Lütfen kamp adını ve en az bir ders seçin.");
+            if(sd > ed) return alert("Bitiş tarihi başlangıçtan önce olamaz.");
+            
+            let startD = new Date(sd + "T12:00:00");
+            let endD = new Date(ed + "T12:00:00");
+            let dayCount = Math.floor((endD - startD) / (1000 * 60 * 60 * 24)) + 1;
+            if(dayCount > 100) return alert("Kamp en fazla 100 gün olabilir.");
+
+            window.wizardCamp = {
+                id: Date.now(), name: name, subjects: Array.from(selectedCampSubjects), startDate: sd, endDate: ed,
+                days: Array.from({length: dayCount}, () => ({ todos: [], notes: '' }))
+            };
+            window.currentWizardDay = 0;
+            isEditingCamp = false;
+
+            window.closeCampCreateModal();
+            document.getElementById('camp-wizard-modal').classList.add('active');
+            window.renderWizardDay();
+        }
+
+        window.editCamp = function(campId, startDayIndex) {
+            let camp = window.appData.camps.find(c => c.id === campId);
+            if(!camp) return;
+            
+            window.wizardCamp = JSON.parse(JSON.stringify(camp)); 
+            
+            if(!window.wizardCamp.days) {
+                let startD = new Date(window.wizardCamp.startDate + "T12:00:00");
+                let endD = new Date(window.wizardCamp.endDate + "T12:00:00");
+                let dayCount = Math.floor((endD - startD) / (1000 * 60 * 60 * 24)) + 1;
+                window.wizardCamp.days = Array.from({length: dayCount}, () => ({ todos: [], notes: '' }));
+            }
+
+            window.currentWizardDay = startDayIndex || 0;
+            isEditingCamp = true;
+            document.getElementById('camp-wizard-modal').classList.add('active');
+            window.renderWizardDay();
+        }
+
+        window.closeWizardModal = function() { document.getElementById('camp-wizard-modal').classList.remove('active'); }
+
+        window.renderWizardDay = function() {
+            let dayData = window.wizardCamp.days[window.currentWizardDay];
+            document.getElementById('wizard-title').innerText = `${window.wizardCamp.name}: ${window.currentWizardDay + 1}. Gün`;
+
+            let startD = new Date(window.wizardCamp.startDate + "T12:00:00");
+            startD.setDate(startD.getDate() + window.currentWizardDay);
+            document.getElementById('wizard-date-label').innerText = window.getLocalYMD(startD).split('-').reverse().join('.');
+
+            document.getElementById('wizard-notes-input').value = dayData.notes || '';
+            window.renderWizardTodos();
+
+            document.getElementById('btn-wizard-prev').style.display = window.currentWizardDay === 0 ? 'none' : 'block';
+            
+            let isLastDay = window.currentWizardDay === window.wizardCamp.days.length - 1;
+            document.getElementById('btn-wizard-next').innerText = isLastDay ? (isEditingCamp ? 'Değişiklikleri Kaydet' : 'Kampı Başlat') : 'Sonraki Gün';
+        }
+
+        window.renderWizardTodos = function() {
+            let dayData = window.wizardCamp.days[window.currentWizardDay];
+            let ul = document.getElementById('wizard-todo-list');
+            ul.innerHTML = dayData.todos.map((t, i) => `<li style="margin-bottom:6px;">${t} <button style="background:none; border:none; color:var(--neon-bordo); cursor:pointer; margin-left:10px; font-weight:bold;" onclick="window.removeWizardTodo(${i})">X</button></li>`).join('');
+        }
+
+        window.addWizardTodo = function() {
+            let val = document.getElementById('wizard-todo-input').value.trim();
+            if(val) {
+                window.wizardCamp.days[window.currentWizardDay].todos.push(val);
+                document.getElementById('wizard-todo-input').value = '';
+                window.renderWizardTodos();
+            }
+        }
+        
+        window.removeWizardTodo = function(idx) {
+            window.wizardCamp.days[window.currentWizardDay].todos.splice(idx, 1);
+            window.renderWizardTodos();
+        }
+
+        window.saveWizardState = function() {
+            window.wizardCamp.days[window.currentWizardDay].notes = document.getElementById('wizard-notes-input').value.trim();
+        }
+
+        window.wizardPrev = function() { window.saveWizardState(); if(window.currentWizardDay > 0) { window.currentWizardDay--; window.renderWizardDay(); } }
+
+        window.wizardNext = function() {
+            window.saveWizardState();
+            if(window.currentWizardDay < window.wizardCamp.days.length - 1) {
+                window.currentWizardDay++; window.renderWizardDay();
+            } else {
+                if(isEditingCamp) {
+                    let idx = window.appData.camps.findIndex(c => c.id === window.wizardCamp.id);
+                    if(idx !== -1) window.appData.camps[idx] = window.wizardCamp;
+                } else { window.appData.camps.push(window.wizardCamp); }
+                window.saveData(); window.closeWizardModal(); window.updateDashboard();
+                window.showToast(isEditingCamp ? "Kamp güncellendi!" : "Kamp başarıyla oluşturuldu!");
+            }
+        }
+
+        window.deleteCamp = function(id) {
+            if(confirm("Bu kampı tamamen silmek istediğinize emin misiniz?")) {
+                window.appData.camps = window.appData.camps.filter(c => c.id !== id);
+                currentCampViewIndex = 0;
+                window.saveData(); window.updateDashboard();
+            }
+        }
+
+        window.renderChart = function() {
+            const container = document.getElementById('chart-container');
+            let svgHTML = `<svg class="weekly-chart" viewBox="0 0 300 120">`;
+            let maxMs = window.appData.targetHours * 3600000; 
+            let daysData = [], totalWeekMs = 0;
+            const trDays = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+
+            let currD = new Date(window.currentViewDate + "T12:00:00");
+            let dayOfWeek = currD.getDay(); 
+            let diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
+            
+            let startOfWeek = new Date(currD);
+            startOfWeek.setDate(currD.getDate() - diffToMonday);
+
+            for(let i=0; i<7; i++) {
+                let d = new Date(startOfWeek);
+                d.setDate(startOfWeek.getDate() + i);
+                let dStr = window.getLocalYMD(d);
+                let ms = (window.appData.sessions[dStr] || []).reduce((a,b)=>a+b.durationMs, 0);
+                
+                let dayLabel = trDays[d.getDay()];
+                daysData.push({ label: dayLabel, ms: ms, isToday: dStr === window.currentViewDate });
+                if(ms > maxMs) maxMs = ms; 
+                totalWeekMs += ms;
+            }
+
+            const barW = 24, spacing = (300 - (7*barW)) / 6;
+            const targetY = 100 - ((window.appData.targetHours * 3600000) / maxMs) * 90;
+            if(targetY > 10) svgHTML += `<line x1="0" y1="${targetY}" x2="300" y2="${targetY}" class="target-line"/>`;
+            
+            daysData.forEach((day, i) => {
+                let x = i * (barW + spacing), h = Math.max((day.ms / maxMs) * 90, 2), y = 100 - h;
+                svgHTML += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="4" class="${day.isToday ? 'bar bar-today' : 'bar'}"></rect><text x="${x + 12}" y="115" class="bar-text">${day.label}</text>`;
+            });
+            container.innerHTML = svgHTML + `</svg>`;
+            document.getElementById('stat-week-total').innerText = `Top: ${window.formatTimeSpanShort(totalWeekMs)}`;
+            document.getElementById('stat-week-avg').innerText = `Ort: ${window.formatTimeSpanShort(totalWeekMs/7)}`;
+        }
+
+        window.addGoal = function() { const t = prompt("Hedef:"); if(t) { window.appData.goals.push({ id: Date.now(), text: t, done: false }); window.saveData(); window.renderGoals(); } }
+        window.toggleGoal = function(id) { let g = window.appData.goals.find(x => x.id === id); if(g) { g.done = !g.done; window.saveData(); window.renderGoals(); } }
+        window.deleteGoal = function(id) { window.appData.goals = window.appData.goals.filter(x => x.id !== id); window.saveData(); window.renderGoals(); }
+        window.renderGoals = function() {
+            const list = document.getElementById('goals-list'); let html = '';
+            window.appData.goals.forEach(g => { html += `<div class="list-row ${g.done ? 'completed' : ''}"><input type="checkbox" ${g.done?'checked':''} onchange="window.toggleGoal(${g.id})"><span class="item-text">${g.text}</span><button class="btn-delete" onclick="window.deleteGoal(${g.id})">×</button></div>`; });
+            list.innerHTML = html || '<div style="color:var(--text-sec); font-size:0.9rem; text-align:center;">Hedef yok.</div>';
+        }
+
+        window.openAgendaModal = function() { document.getElementById('agenda-time').value = ''; document.getElementById('agenda-title').value = ''; document.getElementById('agenda-modal').classList.add('active'); }
+        window.closeAgendaModal = function() { document.getElementById('agenda-modal').classList.remove('active'); }
+        window.saveAgenda = function() { const t = document.getElementById('agenda-time').value, title = document.getElementById('agenda-title').value.trim(); if(t && title) { window.appData.agenda[window.currentViewDate].push({ id: Date.now(), time: t, title: title }); window.appData.agenda[window.currentViewDate].sort((a,b) => a.time.localeCompare(b.time)); window.saveData(); window.closeAgendaModal(); window.renderAgenda(); } }
+        window.deleteAgenda = function(id) { window.appData.agenda[window.currentViewDate] = window.appData.agenda[window.currentViewDate].filter(x => x.id !== id); window.saveData(); window.renderAgenda(); }
+        window.renderAgenda = function() {
+            const list = document.getElementById('agenda-list'); let html = '';
+            window.appData.agenda[window.currentViewDate].forEach(a => { html += `<div class="agenda-item" style="display:flex; justify-content:space-between;"><div><div class="agenda-time">${a.time}</div><div style="font-weight:500;">${a.title}</div></div><button class="btn-delete" onclick="window.deleteAgenda(${a.id})">×</button></div>`; });
+            list.innerHTML = html || '<div style="color:var(--text-sec); font-size:0.9rem; text-align:center;">Plan yok.</div>';
+        }
+
+        window.openScheduleModal = function() { document.getElementById('schedule-modal').classList.add('active'); }
+        window.closeScheduleModal = function() { document.getElementById('schedule-modal').classList.remove('active'); }
+
+        window.openSettings = function() { document.getElementById('set-target').value = window.appData.targetHours; document.getElementById('settings-modal').classList.add('active'); }
+        window.closeSettings = function() { document.getElementById('settings-modal').classList.remove('active'); document.getElementById('admin-panel').style.display = 'none'; }
+        window.checkAdmin = function() { const pass = prompt("Yönetici Parolası:"); if(pass === "195141") { document.getElementById('admin-panel').style.display = 'block'; } }
+        window.saveSettings = function() { window.appData.targetHours = parseFloat(document.getElementById('set-target').value) || 6; window.saveData(); window.updateDashboard(); window.closeSettings(); }
+
+        window.addManualTime = function() {
+            let mins = parseInt(document.getElementById('manual-time-m').value);
+            if(mins && mins > 0) {
+                if(!window.appData.sessions[window.currentViewDate]) window.appData.sessions[window.currentViewDate] = [];
+                window.appData.sessions[window.currentViewDate].push({
+                    id: Date.now(), type: 'Manuel Eklendi', durationMs: mins * 60000, 
+                    time: new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'})
+                });
+                window.saveData(); window.updateDashboard(); document.getElementById('manual-time-m').value = ''; window.showToast(`${mins} dakika başarıyla eklendi!`);
+            }
+        }
+
+        setInterval(() => {
+            const now = new Date(); const h = pad(now.getHours()), m = pad(now.getMinutes()), s = pad(now.getSeconds());
+            document.getElementById('header-clock').innerText = `${h}:${m}:${s}`;
+            const distance = yksTargetDate - now.getTime();
+            if (distance > 0) {
+                const d = Math.floor(distance / (1000 * 60 * 60 * 24)); const h_left = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const yksEl = document.getElementById('yks-compact-timer');
+                if(yksEl) yksEl.innerHTML = `YKS 2027 <span>${d}g ${pad(h_left)}sa</span>`;
+            }
+        }, 1000);
+
+    </script>
+</body>
+</html>

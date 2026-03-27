@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <title>MidoStudy - Kaynak Matrisi</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- SAF SİYAH & BEYAZ UI + PREMIUM MATRİKS --- */
+        :root {
+            --bg-main: #000000; --bg-card: rgba(15, 15, 15, 0.65); 
+            --accent: #FFFFFF; --accent-hover: #e0e0e0; --text-main: #FFFFFF; --text-sec: #888888; 
+            --border: rgba(255, 255, 255, 0.08); --border-hover: rgba(255, 255, 255, 0.25);
+            --neon-bordo: #A30015;
+            --font-head: 'DM Serif Display', serif; --font-body: 'DM Sans', sans-serif; --font-mono: 'Space Mono', monospace;
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg-main); color: var(--text-main); font-family: var(--font-body); min-height: 100vh; position: relative; z-index: 0; }
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* SCROLLBAR GİZLEME VE ŞIKLAŞTIRMA */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        /* ERFENMUN MOR AURA */
+        .ambient-glow { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 80vw; height: 80vw; border-radius: 50%; background: radial-gradient(circle, rgba(105, 55, 195, 0.12) 0%, rgba(0, 0, 0, 0) 60%); z-index: -1; pointer-events: none; }
+
+        /* ÜST BAR */
+        .top-bar { padding: 24px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.5); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;}
+        button { cursor: pointer; border: none; outline: none; font-family: var(--font-body); transition: var(--transition); }
+        .btn-black { background: var(--accent); color: #000; padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 1rem; }
+        .btn-black:hover { background: #e0e0e0; transform: translateY(-2px); }
+
+        .container { max-width: 1600px; margin: 40px auto; padding: 0 40px; }
+        
+        .card { background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 20px; padding: 40px; border: 1px solid var(--border); margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        
+        .selection-title { font-size: 2.2rem; font-family: var(--font-head); margin-bottom: 10px; letter-spacing: 1px; }
+        .selection-subtitle { color: var(--text-sec); font-size: 1.1rem; margin-bottom: 40px; }
+
+        /* TYT / AYT SEÇİCİ */
+        .exam-tabs { display: flex; gap: 16px; margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        .btn-exam { background: transparent; color: var(--text-sec); font-size: 1.4rem; font-weight: 700; padding: 10px 20px; border-radius: 12px; transition: var(--transition); }
+        .btn-exam:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+        .btn-exam.active { background: var(--text-main); color: #000; }
+
+        /* DERS KARTLARI */
+        .subj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .subj-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 30px 20px; text-align: center; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: var(--transition); color: var(--text-sec); }
+        .subj-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.3); color: var(--text-main); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+
+        /* --- MODERN MATRİKS TABLOSU --- */
+        .matrix-container { width: 100%; overflow-x: auto; overflow-y: hidden; border-radius: 16px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: max-content; }
+        
+        /* Satır ve Sütun Tasarımları */
+        th { position: sticky; top: 0; z-index: 10; background: rgba(12,12,12,0.95); backdrop-filter: blur(10px); padding: 24px 20px; font-size: 0.85rem; color: var(--text-sec); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); min-width: 140px; text-align: center; }
+        td { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
+        tr:last-child td { border-bottom: none; }
+        
+        /* Sabit Kaynak (Sol) Sütunu */
+        th:first-child { left: 0; z-index: 20; min-width: 280px; text-align: left; border-right: 1px solid var(--border); box-shadow: 4px 0 15px rgba(0,0,0,0.5); font-size: 1rem; color: var(--accent); }
+        td:first-child { position: sticky; left: 0; z-index: 9; background: rgba(12,12,12,0.95); backdrop-filter: blur(10px); text-align: left; font-weight: 500; font-size: 1.1rem; color: var(--text-main); border-right: 1px solid var(--border); box-shadow: 4px 0 15px rgba(0,0,0,0.5); display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Hover Efektleri */
+        tr:hover td { background: rgba(255,255,255,0.03); }
+        tr:hover td:first-child { background: rgba(20,20,20,0.95); }
+
+        /* MEKANİK CHECKBOX */
+        .matrix-cb { appearance: none; width: 28px; height: 28px; border: 2px solid rgba(255,255,255,0.15); border-radius: 8px; background: rgba(0,0,0,0.5); cursor: pointer; transition: var(--transition); position: relative; }
+        .matrix-cb:hover { border-color: rgba(255,255,255,0.4); transform: scale(1.05); }
+        .matrix-cb:checked { background: var(--neon-bordo); border-color: var(--neon-bordo); box-shadow: 0 0 15px rgba(163, 0, 21, 0.4); transform: scale(1.1); }
+        .matrix-cb:checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -48%); color: #FFF; font-size: 16px; font-weight: 900; }
+
+        /* İLERLEME ÇUBUĞU */
+        .matrix-progress-container { width: 100%; background: #1a1a1a; height: 6px; border-radius: 3px; margin-bottom: 40px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        .matrix-progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.8s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        .matrix-progress-text { font-family: var(--font-mono); font-weight: 700; font-size: 2rem; color: var(--text-main); letter-spacing: -1px; }
+
+        .btn-add-source { background: transparent; border: 1px dashed var(--text-sec); color: var(--text-sec); padding: 16px 32px; border-radius: 12px; font-weight: 500; font-size: 1.1rem; margin-top: 30px; display: inline-block; transition: var(--transition); }
+        .btn-add-source:hover { color: var(--text-main); border-color: var(--text-main); background: rgba(255,255,255,0.03); }
+        
+        .btn-delete-src { background: transparent; border: none; color: var(--text-sec); font-size: 1.2rem; cursor: pointer; transition: var(--transition); padding: 4px; border-radius: 6px; }
+        .btn-delete-src:hover { color: var(--neon-bordo); background: rgba(163,0,21,0.1); }
+
+        @media (max-width: 1024px) {
+            .container { padding: 0 20px; }
+            .card { padding: 30px 20px; }
+            .selection-title { font-size: 1.8rem; }
+            .subj-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+        }
+        @media (max-width: 768px) {
+            .top-bar { padding: 20px; }
+            .exam-tabs { gap: 10px; }
+            .btn-exam { font-size: 1.1rem; padding: 8px 16px; }
+            th:first-child { min-width: 200px; font-size: 0.9rem; }
+            td:first-child { font-size: 0.95rem; }
+            th { min-width: 100px; padding: 16px 10px; font-size: 0.75rem; }
+            td { padding: 16px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow"></div>
+
+    <div class="top-bar">
+        <div class="logo" style="font-family: var(--font-head); font-size: 1.8rem;">MidoStudy <span style="color:var(--text-sec); font-size:1rem; font-family:var(--font-body); font-weight:400; margin-left: 8px;">Kaynak Matrisi</span></div>
+        <button class="btn-black" onclick="window.location.href='index.html'">← Ana Ekran</button>
+    </div>
+
+    <div class="container fade-in" id="selection-view">
+        <div class="card">
+            <div class="selection-title">Hangi Dersi Planlıyorsun?</div>
+            <div class="selection-subtitle">Önce sınav türünü, ardından branşı seçerek kaynak matriksine ulaşın.</div>
+            
+            <div class="exam-tabs">
+                <button class="btn-exam active" id="btn-tyt" onclick="window.selectExam('TYT')">TYT</button>
+                <button class="btn-exam" id="btn-ayt" onclick="window.selectExam('AYT')">AYT</button>
+            </div>
+
+            <div id="tyt-subjects" class="subj-grid">
+                <div class="subj-card" onclick="window.openMatrix('Türkçe')">Türkçe</div>
+                <div class="subj-card" onclick="window.openMatrix('Tarih')">Tarih</div>
+                <div class="subj-card" onclick="window.openMatrix('Coğrafya')">Coğrafya</div>
+                <div class="subj-card" onclick="window.openMatrix('Matematik')">Matematik</div>
+                <div class="subj-card" onclick="window.openMatrix('Geometri')">Geometri</div>
+                <div class="subj-card" onclick="window.openMatrix('Fizik')">Fizik</div>
+                <div class="subj-card" onclick="window.openMatrix('Kimya')">Kimya</div>
+                <div class="subj-card" onclick="window.openMatrix('Biyoloji')">Biyoloji</div>
+            </div>
+
+            <div id="ayt-subjects" class="subj-grid hidden">
+                <div class="subj-card" onclick="window.openMatrix('Matematik')">Matematik</div>
+                <div class="subj-card" onclick="window.openMatrix('Fizik')">Fizik</div>
+                <div class="subj-card" onclick="window.openMatrix('Kimya')">Kimya</div>
+                <div class="subj-card" onclick="window.openMatrix('Biyoloji')">Biyoloji</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container hidden fade-in" id="matrix-view">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+                <div>
+                    <button style="background:transparent; color:var(--text-sec); border:none; margin-bottom:12px; font-size:1rem; font-weight:500; cursor:pointer;" onclick="window.backToSelection()">← Branş Seçimine Dön</button>
+                    <div class="selection-title" id="matrix-title" style="margin: 0; color: var(--accent);">TYT Matematik</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.85rem; color: var(--text-sec); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Bitirme Oranı</div>
+                    <div class="matrix-progress-text" id="matrix-percent">%0</div>
+                </div>
+            </div>
+            
+            <div class="matrix-progress-container">
+                <div class="matrix-progress-bar" id="matrix-progress-bar"></div>
+            </div>
+
+            <div class="matrix-container">
+                <table id="matrix-table">
+                    </table>
+            </div>
+
+            <button class="btn-add-source" onclick="window.addSource()">+ Yeni Kaynak Ekle</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXUUW1XrkTHtEkNLPzd7F4P0jBiP5KnzU",
+            authDomain: "midostudy-1960d.firebaseapp.com",
+            databaseURL: "https://midostudy-1960d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "midostudy-1960d",
+            storageBucket: "midostudy-1960d.firebasestorage.app",
+            messagingSenderId: "299113418248",
+            appId: "1:299113418248:web:42afdb2919766d1c7d8bbd"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'users/mirza_kaynak_data');
+
+        const SUBJECT_TOPICS = {
+            "TYT": {
+                "Türkçe": ["Sözcükte Anlam", "Söz Yorumu", "Deyim ve Atasözü", "Cümlede Anlam", "Paragrafta Anlam", "Ses Bilgisi", "Yazım Kuralları", "Noktalama İşaretleri", "Sözcükte Yapı", "Sözcük Türleri", "Fiil, Ek Fiil, Fiilimsi", "Sözcük Grupları", "Cümlenin Ögeleri", "Cümle Türleri", "Anlatım Bozukluğu"],
+                "Tarih": ["Tarih Bilimi", "İlk Uygarlıklar", "İlk Türk Devletleri", "İslam Tarihi ve Uygarlığı", "Türk-İslam Devletleri", "Orta Çağ ve Avrupa Tarihi", "Türkiye Tarihi", "Beylikten Devlete (1300-1453)", "Dünya Gücü: Osmanlı", "Osmanlı Kültür ve Medeniyeti", "Yeni ve Yakın Çağda Avrupa", "Arayış Yılları (17. Yüzyıl)", "Yeni Çağda Avrupa", "En Uzun Yüzyıl (1800-1922)", "20. Yüzyıl Başlarında Osmanlı", "1. Dünya Savaşı", "Milli Mücadeleye Hazırlık", "Kurtuluş Savaşı ve Antlaşmalar", "I. TBMM Dönemi", "Türk İnkılabı", "Atatürkçülük ve İlkeler", "Türk Dış Politikası"],
+                "Coğrafya": ["Doğa ve İnsan", "Dünya'nın Şekli ve Hareketleri", "Coğrafi Konum", "Harita Bilgisi", "Atmosfer ve Sıcaklık", "İklimler", "Basınç ve Rüzgarlar", "Nem, Yağış ve Buharlaşma", "İç Kuvvetler / Dış Kuvvetler", "Su, Toprak ve Bitkiler", "Nüfus", "Göç", "Yerleşme", "Türkiye'nin Yer Şekilleri", "Ekonomik Faaliyetler", "Bölgeler", "Uluslararası Ulaşım Hatları", "Çevre ve Toplum", "Doğal Afetler"],
+                "Matematik": ["Temel Kavramlar", "Sayı Basamakları", "Bölme ve Bölünebilme", "EBOB - EKOK", "Rasyonel Sayılar", "1. Dereceden Denklemler", "Basit Eşitsizlikler", "Mutlak Değer", "Üslü Sayılar", "Köklü Sayılar", "Çarpanlara Ayırma", "Oran Orantı", "Denklem Çözme", "Problemler", "Kümeler - Kartezyen", "Mantık", "Fonksiyonlar", "Polinomlar", "2. Dereceden Denklemler", "Permütasyon ve Kombinasyon", "Olasılık ve İstatistik"],
+                "Geometri": ["Temel Kavramlar", "Doğruda Açılar", "Üçgende Açılar", "Özel Üçgenler", "Açıortay", "Kenarortay", "Eşlik ve Benzerlik", "Üçgende Alan", "Üçgende Benzerlik", "Açı Kenar Bağıntıları", "Çokgenler", "Özel Dörtgenler", "Çember ve Daire", "Analitik Geometri", "Katı Cisimler", "Çemberin Analitiği"],
+                "Fizik": ["Fizik Bilimine Giriş", "Madde ve Özellikleri", "Sıvıların Kaldırma Kuvveti", "Basınç", "Isı, Sıcaklık ve Genleşme", "Hareket", "Dinamik", "İş, Güç ve Enerji", "Elektrik", "Optik", "Manyetizma", "Dalgalar"],
+                "Kimya": ["Kimya Bilimi", "Atom ve Periyodik Sistem", "Kimyasal Türler Arası Etkileşimler", "Kimyasal Hesaplamalar", "Kimyanın Temel Kanunları", "Asit, Baz ve Tuz", "Maddenin Halleri", "Karışımlar", "Doğa ve Kimya", "Kimya Her Yerde"],
+                "Biyoloji": ["Canlıların Ortak Özellikleri", "Canlıların Temel Bileşenleri", "Hücre ve Organelleri", "Hücre Zarından Madde Geçişi", "Canlıların Sınıflandırılması", "Mitoz ve Eşeysiz Üreme", "Mayoz ve Eşeyli Üreme", "Kalıtım", "Ekosistem Ekolojisi", "Güncel Çevre Sorunları"]
+            },
+            "AYT": {
+                "Matematik": ["Fonksiyonlar", "Polinomlar", "2. Dereceden Denklemler", "Karmaşık Sayılar", "2. Dereceden Eşitsizlikler", "Trigonometri", "Logaritma", "Diziler", "Binom ve Olasılık", "Limit", "Türev", "İntegral"],
+                "Fizik": ["Vektörler", "Kuvvet, Tork ve Denge", "Kütle Merkezi", "Basit Makineler", "Kütle Çekim ve Kepler Yasaları", "Hareket", "Newton'un Hareket Yasaları", "İş, Güç ve Enerji II", "İtme ve Momentum", "Paralel Levhalar ve Sığa", "Manyetik Alan ve Kuvvet", "İndüksiyon, Alternatif Akım", "Çembersel Hareket", "Basit Harmonik Hareket", "Dalga Mekaniği", "Atom Modelleri", "Radyoaktivite", "Modern Fizik", "Modern Teknolojide Fiziğin Uygulamaları"],
+                "Kimya": ["Modern Atom Teorisi", "Gazlar", "Çözeltiler", "Kimyasal Tepkimelerde Enerji", "Kimyasal Tepkimelerde Hız", "Kimyasal Tepkimelerde Denge", "Asit-Baz Dengesi", "Çözünürlük Dengesi", "Kimya ve Elektrik", "Karbon Kimyasına Giriş", "Organik Kimya"],
+                "Biyoloji": ["Sinir ve Endokrin Sistemi", "Duyu Organları", "Destek ve Hareket Sistemi", "Sindirim Sistemi", "Dolaşım ve Bağışıklık Sistemi", "Solunum ve Boşaltım Sistemi", "Üriner Sistem", "Üreme Sistemi ve Embriyonik Gelişim", "Komünite ve Popülasyon Ekolojisi", "Nükleik Asitler", "Genetik Şifre ve Protein Sentezi", "Canlılık ve Enerji", "Fotosentez - Kemosentez", "Hücresel Solunum", "Bitki Biyolojisi", "Canlılar ve Çevre"]
+            }
+        };
+
+        window.sourceData = {}; 
+        let currentExam = "TYT";
+        let currentSubject = null;
+
+        // FİX 1: FIREBASE ANAHTAR TEMİZLEYİCİSİ (SafeKey)
+        // Veritabanını çökertebilecek nokta(.), slash(/) gibi karakterleri zararsız alt çizgiye çevirir.
+        window.getSafeKey = function(src, topic) {
+            let combined = `${src}_${topic}`;
+            return combined.replace(/[.#$\[\]\/]/g, "_"); 
+        };
+
+        get(dbRef).then((snapshot) => {
+            if (snapshot.exists()) { window.sourceData = snapshot.val(); }
+        }).catch(err => console.log("Veri çekilemedi."));
+
+        window.saveSources = function() {
+            set(dbRef, window.sourceData);
+        }
+
+        window.selectExam = function(exam) {
+            currentExam = exam;
+            document.getElementById('btn-tyt').classList.remove('active');
+            document.getElementById('btn-ayt').classList.remove('active');
+            if(exam === 'TYT') {
+                document.getElementById('btn-tyt').classList.add('active');
+                document.getElementById('tyt-subjects').classList.remove('hidden');
+                document.getElementById('ayt-subjects').classList.add('hidden');
+            } else {
+                document.getElementById('btn-ayt').classList.add('active');
+                document.getElementById('ayt-subjects').classList.remove('hidden');
+                document.getElementById('tyt-subjects').classList.add('hidden');
+            }
+        }
+
+        window.backToSelection = function() {
+            document.getElementById('matrix-view').classList.add('hidden');
+            document.getElementById('selection-view').classList.remove('hidden');
+        }
+
+        window.openMatrix = function(subject) {
+            currentSubject = subject;
+            document.getElementById('selection-view').classList.add('hidden');
+            document.getElementById('matrix-view').classList.remove('hidden');
+            document.getElementById('matrix-title').innerText = `${currentExam} ${currentSubject}`;
+            window.renderTable();
+            window.scrollTo(0,0);
+        }
+
+        window.updateProgressUI = function(data, topics) {
+            let total = 0;
+            let checked = 0;
+            data.sources.forEach(src => {
+                topics.forEach(topic => {
+                    total++;
+                    let key = window.getSafeKey(src, topic);
+                    if(data.checks && data.checks[key]) checked++;
+                });
+            });
+            let percent = total > 0 ? Math.floor((checked / total) * 100) : 0;
+            document.getElementById('matrix-percent').innerText = `%${percent}`;
+            document.getElementById('matrix-progress-bar').style.width = `${percent}%`;
+        }
+
+        window.renderTable = function() {
+            if(!window.sourceData[currentExam]) window.sourceData[currentExam] = {};
+            if(!window.sourceData[currentExam][currentSubject]) {
+                window.sourceData[currentExam][currentSubject] = { sources: [], checks: {} };
+            }
+            
+            const data = window.sourceData[currentExam][currentSubject];
+            const topics = SUBJECT_TOPICS[currentExam][currentSubject];
+            const table = document.getElementById('matrix-table');
+            
+            let html = `<thead><tr><th class="th-source">Kaynaklar \\ Konular</th>`;
+            topics.forEach(t => { html += `<th>${t}</th>`; });
+            html += `</tr></thead><tbody>`;
+
+            if(data.sources.length === 0) {
+                html += `<tr><td colspan="${topics.length + 1}" style="color:var(--text-sec); padding: 40px; font-size: 1.1rem; font-weight:400;">Henüz bu derse ait bir kaynak eklemediniz. Aşağıdaki butondan ilk kaynağınızı ekleyebilirsiniz.</td></tr>`;
+            } else {
+                data.sources.forEach(src => {
+                    // FİX 2: Tırnak (Quote) hatasını önleyen Data-Attribute mimarisi
+                    let safeSrcAttr = src.replace(/"/g, '&quot;');
+                    html += `<tr>
+                        <td>
+                            <span>${src}</span> 
+                            <button class="btn-delete-src" data-src="${safeSrcAttr}" onclick="window.handleDeleteSource(this)" title="Kaynağı Sil">✕</button>
+                        </td>`;
+                    
+                    topics.forEach(topic => {
+                        let safeKey = window.getSafeKey(src, topic);
+                        let isChecked = (data.checks && data.checks[safeKey]) ? 'checked' : '';
+                        let safeTopicAttr = topic.replace(/"/g, '&quot;');
+                        
+                        html += `<td><input type="checkbox" class="matrix-cb" ${isChecked} data-src="${safeSrcAttr}" data-topic="${safeTopicAttr}" onchange="window.handleCheck(this)"></td>`;
+                    });
+                    html += `</tr>`;
+                });
+            }
+            
+            html += `</tbody>`;
+            table.innerHTML = html;
+
+            window.updateProgressUI(data, topics);
+        }
+
+        window.addSource = function() {
+            let srcName = prompt("Eklemek istediğiniz kaynağın adını girin (Örn: 345 Soru Bankası):");
+            if(srcName && srcName.trim() !== '') {
+                window.sourceData[currentExam][currentSubject].sources.push(srcName.trim());
+                window.saveSources();
+                window.renderTable();
+            }
+        }
+
+        window.handleDeleteSource = function(el) {
+            let srcName = el.getAttribute('data-src');
+            window.deleteSource(srcName);
+        }
+
+        window.deleteSource = function(srcName) {
+            if(confirm(`"${srcName}" kaynağını ve tüm işaretlerini silmek istediğinize emin misiniz?`)) {
+                let data = window.sourceData[currentExam][currentSubject];
+                data.sources = data.sources.filter(s => s !== srcName);
+                
+                // Tam ve güvenli temizlik
+                if(data.checks) {
+                    SUBJECT_TOPICS[currentExam][currentSubject].forEach(topic => {
+                        let safeKey = window.getSafeKey(srcName, topic);
+                        delete data.checks[safeKey];
+                    });
+                }
+                
+                window.saveSources();
+                window.renderTable();
+            }
+        }
+
+        window.handleCheck = function(el) {
+            let src = el.getAttribute('data-src');
+            let topic = el.getAttribute('data-topic');
+            window.toggleCheck(src, topic, el.checked);
+        }
+
+        window.toggleCheck = function(src, topic, isChecked) {
+            let data = window.sourceData[currentExam][currentSubject];
+            let safeKey = window.getSafeKey(src, topic);
+            
+            if(!data.checks) data.checks = {};
+            data.checks[safeKey] = isChecked;
+            
+            window.saveSources();
+            
+            let topics = SUBJECT_TOPICS[currentExam][currentSubject];
+            window.updateProgressUI(data, topics);
+        }
+    </script>
+</body>
+</html>

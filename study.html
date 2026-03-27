@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <title>MidoStudy - Odaklanma</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #000000; --accent: #FFFFFF; --text-main: #FFFFFF; --text-sec: #888888; 
+            --border: rgba(255, 255, 255, 0.06); --font-mono: 'Space Mono', monospace; --font-body: 'DM Sans', sans-serif;
+            --transition: all 0.3s ease;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg-main); color: var(--text-main); font-family: var(--font-body); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 0; overflow: hidden; }
+        .hidden { display: none !important; }
+
+        .ambient-glow { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 80vw; height: 80vw; border-radius: 50%; background: radial-gradient(circle, rgba(105, 55, 195, 0.12) 0%, rgba(0, 0, 0, 0) 60%); z-index: -1; pointer-events: none; }
+
+        .flip-anim { animation: oldFlip 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; transform-origin: center; }
+        @keyframes oldFlip { 0% { transform: rotateX(90deg); opacity: 0; } 100% { transform: rotateX(0deg); opacity: 1; } }
+
+        .top-bar { position: absolute; top: 30px; left: 40px; }
+        button { cursor: pointer; border: none; outline: none; font-family: var(--font-body); transition: var(--transition); }
+        .btn-black { background: var(--accent); color: #000; padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 1rem; }
+        .btn-black:hover { background: #e0e0e0; transform: translateY(-2px); }
+        .btn-icon { background: transparent; color: var(--text-sec); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+        .btn-icon:hover { color: var(--text-main); }
+
+        .tabs { display: flex; background: rgba(0,0,0,0.6); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 30px; backdrop-filter: blur(10px); }
+        .tab-btn { flex: 1; padding: 16px 32px; background: transparent; color: var(--text-sec); font-weight: 500; font-size: 1.1rem; border-right: 1px solid var(--border); }
+        .tab-btn:last-child { border-right: none; }
+        .tab-btn.active { background: var(--text-main); color: #000; }
+
+        .subject-badge { background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 1.1rem; font-weight: 700; color: var(--text-sec); margin-bottom: 20px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        .subject-badge span { color: var(--accent); }
+
+        .timer-flip-group { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 50px; perspective: 1000px; }
+        .flip-card { background: rgba(0,0,0,0.8); color: #FFFFFF; font-family: var(--font-mono); font-size: 8rem; font-weight: 700; width: 160px; height: 200px; display: flex; align-items: center; justify-content: center; border-radius: 16px; position: relative; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); transform-style: preserve-3d; }
+        .flip-card::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.1); }
+        .flip-colon { font-family: var(--font-mono); font-size: 6rem; color: var(--text-main); font-weight: 700; margin: 0 -5px; padding-bottom: 15px; }
+
+        .controls { display: flex; justify-content: center; gap: 16px; }
+        .timer-content { display: flex; flex-direction: column; align-items: center; }
+
+        input { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-main); padding: 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 1.2rem; text-align: center; width: 150px; margin-bottom: 20px; outline: none; }
+        input:focus { border-color: rgba(255,255,255,0.3); }
+
+        /* MODAL */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; visibility: hidden; transition: var(--transition); }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content { background: #111; padding: 32px; border-radius: 16px; width: 450px; max-width: 90%; border: 1px solid var(--border); transform: scale(0.96); transition: var(--transition); text-align: center; }
+        .modal.active .modal-content { transform: scale(1); }
+        .subj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+
+        @media (max-width: 768px) {
+            .flip-card { width: 90px; height: 120px; font-size: 4rem; }
+            .flip-colon { font-size: 3rem; }
+            .top-bar { left: 20px; top: 20px; }
+            .tabs { margin-top: 60px; flex-direction: column; }
+            .tab-btn { border-right: none; border-bottom: 1px solid var(--border); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow"></div>
+
+    <div class="top-bar">
+        <button class="btn-black" onclick="window.exitStudy()">← Çıkış Yap</button>
+    </div>
+
+    <div class="subject-badge" id="subject-badge" style="opacity: 0;">
+        <span id="sb-exam">TYT</span> - <span id="sb-subj">Matematik</span>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="window.switchTab('timer', event)">SAYAÇ</button>
+        <button class="tab-btn" onclick="window.switchTab('stopwatch', event)">KRONOMETRE</button>
+        <button class="tab-btn" onclick="window.switchTab('pomodoro', event)">POMODORO</button>
+    </div>
+
+    <div id="tab-timer" class="timer-content">
+        <input type="number" id="timer-input-m" placeholder="Dakika gir">
+        <div class="timer-flip-group">
+            <div class="flip-card" id="tm-h">00</div><div class="flip-colon">:</div>
+            <div class="flip-card" id="tm-m">00</div><div class="flip-colon">:</div>
+            <div class="flip-card" id="tm-s">00</div>
+        </div>
+        <div class="controls">
+            <button class="btn-black" id="btn-timer-start" onclick="window.requestStart('timer')">Başlat</button>
+            <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.pauseTimer()">Duraklat</button>
+            <button class="btn-black" style="background:#111; color:#FFF; border:1px solid #333;" onclick="window.resetTimer()">Sıfırla</button>
+            <button class="btn-black hidden" id="btn-timer-change" style="background:#A30015; color:#FFF;" onclick="window.openSubjectModal()">Ders Değiştir</button>
+        </div>
+    </div>
+
+    <div id="tab-stopwatch" class="timer-content hidden">
+        <div class="timer-flip-group">
+            <div class="flip-card" id="sw-h">00</div><div class="flip-colon">:</div>
+            <div class="flip-card" id="sw-m">00</div><div class="flip-colon">:</div>
+            <div class="flip-card" id="sw-s">00</div>
+        </div>
+        <div class="controls">
+            <button class="btn-black" id="btn-sw-start" onclick="window.requestStart('stopwatch')">Başlat</button>
+            <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.pauseStopwatch()">Duraklat</button>
+            <button class="btn-black" style="background:#111; color:#FFF; border:1px solid #333;" onclick="window.resetStopwatch()">Sıfırla</button>
+            <button class="btn-black hidden" id="btn-sw-change" style="background:#A30015; color:#FFF;" onclick="window.openSubjectModal()">Ders Değiştir</button>
+        </div>
+    </div>
+
+    <div id="tab-pomodoro" class="timer-content hidden">
+        <div style="color:var(--text-sec); font-weight:500; font-size:1.5rem; margin-bottom: 20px;" id="pomo-status">Çalışma Odaklanması</div>
+        <div class="timer-flip-group">
+            <div class="flip-card" id="pm-m">25</div><div class="flip-colon">:</div>
+            <div class="flip-card" id="pm-s">00</div>
+        </div>
+        <div class="controls">
+            <button class="btn-black" id="btn-pomo-start" onclick="window.requestStart('pomodoro')">Başlat</button>
+            <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.pausePomodoro()">Duraklat</button>
+            <button class="btn-black" style="background:#111; color:#FFF; border:1px solid #333;" onclick="window.resetPomodoro()">Sıfırla</button>
+            <button class="btn-black hidden" id="btn-pomo-change" style="background:#A30015; color:#FFF;" onclick="window.openSubjectModal()">Ders Değiştir</button>
+        </div>
+    </div>
+
+    <div id="subject-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="font-size: 1.5rem; font-family: var(--font-head);">Ne Çalışıyorsun?</div>
+                <button class="btn-icon" onclick="window.closeSubjectModal()">✕</button>
+            </div>
+            
+            <div style="color: var(--text-sec); font-size: 0.9rem; margin-bottom: 20px; text-align: left;">Önce sınav türünü, ardından branşı seçin.</div>
+            
+            <div id="step-1" style="display: flex; gap: 12px;">
+                <button class="btn-black" style="flex: 1; padding: 20px; font-size: 1.2rem;" onclick="window.selectExam('TYT')">TYT</button>
+                <button class="btn-black" style="flex: 1; padding: 20px; font-size: 1.2rem;" onclick="window.selectExam('AYT')">AYT</button>
+            </div>
+
+            <div id="step-2-tyt" class="subj-grid hidden">
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Türkçe')">Türkçe</button>
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Sosyal')">Sosyal</button>
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Matematik')">Matematik</button>
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Geometri')">Geometri</button>
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Fizik')">Fizik</button>
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Kimya')">Kimya</button>
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Biyoloji')">Biyoloji</button>
+                <button class="btn-black" style="grid-column: span 2; background: transparent; border: 1px solid #444; color: #888;" onclick="window.backToExams()">← Geri Dön</button>
+            </div>
+
+            <div id="step-2-ayt" class="subj-grid hidden">
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Matematik')">Matematik</button>
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Geometri')">Geometri</button>
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Fizik')">Fizik</button>
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Kimya')">Kimya</button>
+                <button class="btn-black" style="background:#222; color:#FFF;" onclick="window.finalizeSubjectSelection('Biyoloji')">Biyoloji</button>
+                <button class="btn-black" style="grid-column: span 2; background: transparent; border: 1px solid #444; color: #888;" onclick="window.backToExams()">← Geri Dön</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXUUW1XrkTHtEkNLPzd7F4P0jBiP5KnzU",
+            authDomain: "midostudy-1960d.firebaseapp.com",
+            databaseURL: "https://midostudy-1960d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "midostudy-1960d",
+            storageBucket: "midostudy-1960d.firebasestorage.app",
+            messagingSenderId: "299113418248",
+            appId: "1:299113418248:web:42afdb2919766d1c7d8bbd"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'users/mirza_data');
+
+        window.getLocalYMD = function(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+        const realTodayStr = window.getLocalYMD(new Date());
+        
+        window.appData = { targetHours: 6, goals: [], todos: {}, agenda: {}, sessions: {}, camps: [], stats: { streak: 0, lastStudyDate: null, totalPomo: 0 } };
+
+        get(dbRef).then((snapshot) => {
+            if (snapshot.exists()) { window.appData = snapshot.val(); }
+            if(!window.appData.sessions[realTodayStr]) window.appData.sessions[realTodayStr] = [];
+        });
+
+        let currentExam = null;
+        let currentSubject = null;
+        let pendingTimerToStart = null; 
+
+        window.switchTab = function(tab, event) {
+            if(activeTimer && !confirm("Zamanlayıcı çalışıyor. Değiştirmek istediğinize emin misiniz?")) return;
+            if(activeTimer) { window['pause' + activeTimer.charAt(0).toUpperCase() + activeTimer.slice(1)](); window.finalizeLiveSessions(); }
+            
+            document.querySelectorAll('.timer-content').forEach(e => e.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            event.target.classList.add('active');
+        }
+
+        window.exitStudy = function() {
+            if(activeTimer && !confirm("Zamanlayıcı çalışıyor. Çıkmak istediğinize emin misiniz?")) return;
+            if(activeTimer) { window['pause' + activeTimer.charAt(0).toUpperCase() + activeTimer.slice(1)](); window.finalizeLiveSessions(); }
+            window.location.href = 'index.html';
+        }
+
+        window.requestStart = function(timerType) {
+            if(activeTimer === timerType) return;
+            if(timerType === 'timer') {
+                let inputM = parseInt(document.getElementById('timer-input-m').value) || 0;
+                if(timerMs <= 0 && inputM <= 0) return alert("Lütfen bir süre girin.");
+            }
+            if(!currentSubject) {
+                pendingTimerToStart = timerType;
+                window.openSubjectModal();
+            } else {
+                window['start' + timerType.charAt(0).toUpperCase() + timerType.slice(1)]();
+            }
+        }
+
+        window.openSubjectModal = function() {
+            document.getElementById('subject-modal').classList.add('active');
+            window.backToExams();
+        }
+        
+        // YENİ: MODALI İPTAL ETME
+        window.closeSubjectModal = function() {
+            document.getElementById('subject-modal').classList.remove('active');
+            pendingTimerToStart = null;
+        }
+        
+        window.selectExam = function(exam) {
+            currentExam = exam;
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2-tyt').classList.add('hidden');
+            document.getElementById('step-2-ayt').classList.add('hidden');
+            
+            if(exam === 'TYT') document.getElementById('step-2-tyt').classList.remove('hidden');
+            if(exam === 'AYT') document.getElementById('step-2-ayt').classList.remove('hidden');
+        }
+
+        window.backToExams = function() {
+            document.getElementById('step-1').classList.remove('hidden');
+            document.getElementById('step-2-tyt').classList.add('hidden');
+            document.getElementById('step-2-ayt').classList.add('hidden');
+        }
+
+        window.finalizeSubjectSelection = function(subject) {
+            if(activeTimer && currentSubject) {
+                window.finalizeLiveSessions();
+            }
+            
+            currentSubject = subject;
+            document.getElementById('sb-exam').innerText = currentExam;
+            document.getElementById('sb-subj').innerText = currentSubject;
+            document.getElementById('subject-badge').style.opacity = "1";
+            
+            document.querySelectorAll('#btn-timer-change, #btn-sw-change, #btn-pomo-change').forEach(el => el.classList.remove('hidden'));
+
+            document.getElementById('subject-modal').classList.remove('active');
+
+            if(pendingTimerToStart) {
+                let type = pendingTimerToStart;
+                pendingTimerToStart = null;
+                window['start' + type.charAt(0).toUpperCase() + type.slice(1)]();
+            }
+        }
+
+        let activeTimer = null; let timerInterval = null; let lastTick = 0; let saveTimeout = null;
+        let timerMs = 0; let swMs = 0; let pomoMs = 0; let pomoState = 'work';
+
+        function pad(n) { return n < 10 ? '0' + n : String(n); }
+
+        function throttleSave() {
+            if(saveTimeout) return;
+            saveTimeout = setTimeout(() => { set(dbRef, window.appData); saveTimeout = null; }, 5000);
+        }
+
+        window.addLiveProgress = function(type, delta) {
+            if(delta <= 0 || !currentSubject) return;
+            if(!window.appData.sessions[realTodayStr]) window.appData.sessions[realTodayStr] = [];
+            let sessions = window.appData.sessions[realTodayStr];
+            let liveSession = sessions.find(s => s.isLive && s.type === type && s.exam === currentExam && s.subject === currentSubject);
+            
+            if(!liveSession) {
+                liveSession = { 
+                    id: Date.now(), type: type, durationMs: 0, isLive: true, 
+                    exam: currentExam, subject: currentSubject,
+                    time: new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'}) 
+                };
+                sessions.push(liveSession);
+            }
+            liveSession.durationMs += delta;
+            if(window.appData.stats.lastStudyDate !== realTodayStr) { window.appData.stats.streak++; window.appData.stats.lastStudyDate = realTodayStr; }
+            throttleSave();
+        }
+
+        window.finalizeLiveSessions = function() {
+            if(window.appData.sessions[realTodayStr]) {
+                window.appData.sessions[realTodayStr].forEach(s => { if(s.isLive) delete s.isLive; });
+                set(dbRef, window.appData);
+            }
+        }
+
+        function updateFlipCard(id, val) {
+            const el = document.getElementById(id);
+            if(!el) return;
+            if(el.innerText !== val) {
+                el.classList.remove('flip-anim'); void el.offsetWidth;
+                el.innerText = val; el.classList.add('flip-anim');
+            }
+        }
+
+        function extractHMS(ms) {
+            let totalSec = Math.floor(ms / 1000);
+            return { h: pad(Math.floor(totalSec / 3600)), m: pad(Math.floor((totalSec % 3600) / 60)), s: pad(totalSec % 60) };
+        }
+
+        function runGlobalTick() {
+            if(!activeTimer) return;
+            const now = Date.now(); const delta = now - lastTick; lastTick = now;
+
+            if(activeTimer === 'stopwatch') {
+                swMs += delta; let t = extractHMS(swMs);
+                updateFlipCard('sw-h', t.h); updateFlipCard('sw-m', t.m); updateFlipCard('sw-s', t.s);
+                window.addLiveProgress('Kronometre', delta);
+            } 
+            else if(activeTimer === 'timer') {
+                timerMs -= delta;
+                if(timerMs <= 0) { timerMs = 0; window.pauseTimer(); window.finalizeLiveSessions(); }
+                let t = extractHMS(timerMs);
+                updateFlipCard('tm-h', t.h); updateFlipCard('tm-m', t.m); updateFlipCard('tm-s', t.s);
+                window.addLiveProgress('Sayaç', delta);
+            }
+            else if(activeTimer === 'pomodoro') {
+                pomoMs -= delta;
+                if(pomoMs <= 0) {
+                    if(pomoState === 'work') { pomoState = 'break'; pomoMs = 5 * 60 * 1000; document.getElementById('pomo-status').innerText = "Mola Zamanı (5dk)"; } 
+                    else { pomoState = 'work'; pomoMs = 25 * 60 * 1000; document.getElementById('pomo-status').innerText = "Çalışma Odaklanması (25dk)"; }
+                }
+                let t = extractHMS(pomoMs); updateFlipCard('pm-m', t.m); updateFlipCard('pm-s', t.s);
+                if(pomoState === 'work') window.addLiveProgress('Pomodoro', delta);
+            }
+        }
+
+        window.startStopwatch = function() { 
+            if(activeTimer === 'stopwatch') return;
+            activeTimer = 'stopwatch'; lastTick = Date.now(); 
+            if(!timerInterval) timerInterval = setInterval(runGlobalTick, 200); 
+            document.getElementById('btn-sw-start').innerText = "Çalışıyor"; 
+        }
+        window.pauseStopwatch = function() { activeTimer = null; clearInterval(timerInterval); timerInterval = null; document.getElementById('btn-sw-start').innerText = "Devam"; set(dbRef, window.appData); }
+        window.resetStopwatch = function() { window.pauseStopwatch(); swMs = 0; updateFlipCard('sw-h', '00'); updateFlipCard('sw-m', '00'); updateFlipCard('sw-s', '00'); document.getElementById('btn-sw-start').innerText = "Başlat"; window.finalizeLiveSessions(); }
+
+        window.startTimer = function() {
+            if(activeTimer === 'timer') return;
+            if(timerMs <= 0) { let inputM = parseInt(document.getElementById('timer-input-m').value) || 0; timerMs = inputM * 60 * 1000; }
+            if(timerMs <= 0) return;
+            activeTimer = 'timer'; lastTick = Date.now(); 
+            if(!timerInterval) timerInterval = setInterval(runGlobalTick, 200); 
+            document.getElementById('btn-timer-start').innerText = "Çalışıyor";
+        }
+        window.pauseTimer = function() { activeTimer = null; clearInterval(timerInterval); timerInterval = null; document.getElementById('btn-timer-start').innerText = "Devam"; set(dbRef, window.appData); }
+        window.resetTimer = function() { window.pauseTimer(); timerMs = 0; updateFlipCard('tm-h', '00'); updateFlipCard('tm-m', '00'); updateFlipCard('tm-s', '00'); document.getElementById('btn-timer-start').innerText = "Başlat"; window.finalizeLiveSessions(); }
+
+        window.startPomodoro = function() {
+            if(activeTimer === 'pomodoro') return;
+            if(pomoMs <= 0) { pomoMs = 25 * 60 * 1000; pomoState = 'work'; document.getElementById('pomo-status').innerText = "Çalışma Odaklanması (25dk)"; }
+            activeTimer = 'pomodoro'; lastTick = Date.now(); 
+            if(!timerInterval) timerInterval = setInterval(runGlobalTick, 200); 
+            document.getElementById('btn-pomo-start').innerText = "Çalışıyor";
+        }
+        window.pausePomodoro = function() { activeTimer = null; clearInterval(timerInterval); timerInterval = null; document.getElementById('btn-pomo-start').innerText = "Devam"; set(dbRef, window.appData); }
+        window.resetPomodoro = function() { window.pausePomodoro(); pomoMs = 0; updateFlipCard('pm-m', '25'); updateFlipCard('pm-s', '00'); document.getElementById('btn-pomo-start').innerText = "Başlat"; window.finalizeLiveSessions(); }
+
+    </script>
+</body>
+</html>
